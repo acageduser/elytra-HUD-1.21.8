@@ -1,0 +1,79 @@
+plugins {
+    id 'fabric-loom' version '1.10.1'   // was 1.7-SNAPSHOT
+    id 'maven-publish'
+}
+
+version = project.mod_version
+group   = project.maven_group
+
+base { archivesName = project.archives_base_name }
+
+repositories {
+    mavenCentral()                                // add this
+    maven { name = "Terraformers"; url = "https://maven.terraformersmc.com/" }
+    maven { url "https://maven.shedaniel.me/" }
+    maven { url "https://maven.terraformersmc.com/releases/" }
+    maven { name = "Ladysnake Libs"; url = "https://maven.ladysnake.org/releases" }
+}
+
+loom {
+    splitEnvironmentSourceSets()
+    mods {
+        "elytra-hud" {
+            sourceSet sourceSets.main
+            sourceSet sourceSets.client
+        }
+    }
+}
+
+dependencies {
+    // Use 1.21.8 versions from gradle.properties
+    minecraft      "com.mojang:minecraft:${project.minecraft_version}"
+    mappings       "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+    // Fabric API (1.21.8)
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    // Mod Menu (15.x for 1.21.8)
+    modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
+
+    // Trinkets (only if you actually use it)
+    modImplementation "dev.emi:trinkets:${project.trinkets_version}"
+
+    // Cloth Config — keep if you use its API; otherwise remove.
+    modApi("me.shedaniel.cloth:cloth-config-fabric:15.0.127") {
+        exclude(group: "net.fabricmc.fabric-api")
+    }
+}
+
+processResources {
+    inputs.property "version", project.version
+    filesMatching("fabric.mod.json") { expand "version": project.version }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 21
+}
+
+java {
+    withSourcesJar()
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+jar {
+    from("LICENSE") { rename { "${it}_${project.base.archivesName.get()}" } }
+}
+
+publishing {
+    publications {
+        create("mavenJava", MavenPublication) {
+            artifactId = project.archives_base_name
+            from components.java
+        }
+    }
+    repositories {
+        // add your publishing targets here if/when needed
+    }
+}
